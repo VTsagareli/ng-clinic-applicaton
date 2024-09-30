@@ -1,7 +1,6 @@
 export interface User {
-    id: string;
-    email: string;
-    password: string;
-    role: 'admin' | 'receptionist';
-  }
-  
+  uid: string;                
+  email: string;             
+  displayName?: string;      
+  role?: 'admin' | 'receptionist';
+}

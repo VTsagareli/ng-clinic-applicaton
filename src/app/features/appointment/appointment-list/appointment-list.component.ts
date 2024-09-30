@@ -36,12 +36,6 @@ import { AppointmentCreateComponent } from "../appointment-create/appointment-cr
           <mat-cell *matCellDef="let appointment"> {{appointment.type}} </mat-cell>
         </ng-container>
 
-        <!-- Doctor Column -->
-        <ng-container matColumnDef="doctorName">
-          <mat-header-cell *matHeaderCellDef> Doctor </mat-header-cell>
-          <mat-cell *matCellDef="let appointment"> {{appointment.doctorName}} </mat-cell>
-        </ng-container>
-
         <!-- Date Column -->
         <ng-container matColumnDef="date">
           <mat-header-cell *matHeaderCellDef> Date </mat-header-cell>
@@ -52,6 +46,12 @@ import { AppointmentCreateComponent } from "../appointment-create/appointment-cr
         <ng-container matColumnDef="time">
           <mat-header-cell *matHeaderCellDef> Time </mat-header-cell>
           <mat-cell *matCellDef="let appointment"> {{appointment.date | date: 'shortTime'}} </mat-cell>
+        </ng-container>
+
+        <!-- Doctor Name Column -->
+        <ng-container matColumnDef="doctorName">
+          <mat-header-cell *matHeaderCellDef> Doctor Name </mat-header-cell>
+          <mat-cell *matCellDef="let appointment"> {{appointment.doctorName}} </mat-cell>
         </ng-container>
 
         <!-- Header and Rows -->
@@ -71,7 +71,7 @@ import { AppointmentCreateComponent } from "../appointment-create/appointment-cr
 })
 export class AppointmentListComponent implements OnInit {
   appointments$: Observable<Appointment[]>;
-  displayedColumns: string[] = ['firstName', 'lastName', 'type', 'doctorName', 'date', 'time'];
+  displayedColumns: string[] = ['firstName', 'lastName', 'type', 'date', 'time', 'doctorName'];
 
   constructor(private appointmentService: AppointmentService) {
     this.appointments$ = this.appointmentService.getAppointmentsWithDetails().pipe(

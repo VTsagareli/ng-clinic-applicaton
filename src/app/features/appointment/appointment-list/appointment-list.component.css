@@ -1,21 +1,12 @@
-.appointment-container {
-  padding: 20px;
-  max-width: 100%;
-  margin: 0 auto;
-}
-
 .appointments-table {
   width: 100%;
+  background-color: rgb(103, 119, 149); /* Set to white or desired color */
 }
 
-.loading-spinner-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 200px;
+.appointments-table mat-header-cell {
+  background-color: #696666 !important; /* Use !important if necessary */
 }
 
-mat-spinner {
-  margin-bottom: 10px;
+.appointments-table mat-cell {
+  background-color: transparent !important; /* Use !important if necessary */
 }
