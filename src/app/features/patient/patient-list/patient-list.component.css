@@ -1,0 +1,22 @@
+.patient-container {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .patients-table {
+    width: 100%;
+  }
+  
+  .loading-spinner-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+  }
+  
+  mat-spinner {
+    margin-bottom: 10px;
+  }
+  

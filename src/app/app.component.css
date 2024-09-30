@@ -1,0 +1,26 @@
+/* app.component.css */
+.app-container {
+    display: flex;
+    height: 100vh; /* Full height */
+  }
+  
+  main.main-content {
+    flex: 1; /* Allow the main content to fill the available space */
+    padding: 20px; /* Add some padding */
+    overflow-y: auto; /* Enable scrolling if content overflows */
+  }
+  .main-content {
+    margin-left: 250px; /* Adjust this value to match the width of your side nav */
+    padding-top: 20px;  /* Add padding to ensure content starts below the navbar */
+    width: calc(100% - 250px); /* Adjust the width of the main content */
+  }
+  
+  
+  /* Optional: Add some styles for the sidenav */
+  .side-menu {
+    width: 250px; /* Fixed width for sidenav */
+    background: #f8f8f8; /* Background color */
+    padding: 10px; /* Add padding */
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Optional shadow */
+  }
+  

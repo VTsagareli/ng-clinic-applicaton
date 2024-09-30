@@ -1,0 +1,28 @@
+.side-menu {
+    width: 250px; /* Set your preferred width */
+    background-color: #f0f0f0; /* Adjust background color */
+    height: 100%; /* Full height */
+    padding: 10px; /* Padding around the menu */
+    position: fixed; /* Fix the side menu to the left */
+  }
+  
+  .side-menu ul {
+    list-style-type: none; /* Remove default bullet points */
+    padding: 0; /* Remove default padding */
+  }
+  
+  .side-menu li {
+    margin: 10px 0; /* Space between items */
+  }
+  
+  .side-menu a {
+    text-decoration: none; /* Remove underline */
+    color: #333; /* Change text color */
+    display: block; /* Make the entire area clickable */
+    padding: 10px; /* Padding for clickable area */
+  }
+  
+  .side-menu a:hover {
+    background-color: #ddd; /* Change background on hover */
+  }
+  
