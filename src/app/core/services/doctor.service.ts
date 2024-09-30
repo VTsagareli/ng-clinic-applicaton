@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Doctor } from '../models/doctor.model';
-import { Observable, from } from 'rxjs';
+import { Observable, combineLatest, from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { collection, Firestore, getDocs, doc, getDoc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { FirebaseService } from './firebase.service';
@@ -44,6 +44,17 @@ export class DoctorService {
         }
       })
     );
+  }
+
+    // Get multiple doctors by IDs
+  getDoctorsByIds(ids: string[]): Observable<Doctor[]> {
+      // Create an array of observables for each doctor ID
+      const doctorObservables = ids.map(id => this.getDoctorById(id));
+      
+      // Combine the observables into one and return the array of doctors
+      return combineLatest(doctorObservables).pipe(
+        map(doctors => doctors.filter((doctor): doctor is Doctor => doctor !== undefined)) // Filter out undefined
+      );
   }
 
   // Add a new doctor
