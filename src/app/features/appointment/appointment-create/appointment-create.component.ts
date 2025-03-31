@@ -1,124 +1,203 @@
-import { Component } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
 import { AppointmentService } from '../../../core/services/appointment.service';
-import { PatientCreateComponent } from "../../patient/patient-create/patient-create.component";
 import { PatientService } from '../../../core/services/patient.service';
+import { RouterModule } from '@angular/router';
 
 @Component({
-  standalone: true,
   selector: 'app-appointment-create',
+  standalone: true,
   styleUrls: ['./appointment-create.component.css'],
-  imports: [CommonModule, ReactiveFormsModule, PatientCreateComponent],
-  template:  `
-<h2 class="appointment-title">Create An Appointment</h2>
-<div class="appointment-form-container">
-  <div class="left-section">
-    <div *ngIf="!showPatientCreate">
-      <h3>Search for Patient ID</h3>
-      <div [formGroup]="patientSearchForm">
-        <input formControlName="firstName" placeholder="First Name" required>
-        <input formControlName="lastName" placeholder="Last Name" required>
-        <button (click)="searchPatientId()">Search</button>
-
-        <div *ngIf="!searchedPatientId && searchedPatientName">
-          <p>No patient found with name: {{ searchedPatientName }}</p>
-        </div>
-      </div>
-      <button class="new-patient-btn" (click)="openModal()">New Patient</button>
-    </div>
-  </div>
-
-  <ng-template #patientModal>
-    <div class="modal">
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    RouterModule
+  ],
+  template: `
+    <!-- Modal Form -->
+    <div class="modal-backdrop" *ngIf="showModal">
       <div class="modal-content">
-        <span class="close" (click)="closeModal()">&times;</span>
-        <h3>Fill Out New Patient Info:</h3>
-        <app-patient-create [appointmentForm]="appointmentForm" (close)="closeModal()"></app-patient-create>
+        <button class="close-button" (click)="closeModal()">×</button>
+        <h2>Create Appointment</h2>
+
+        <!-- New Patient Flow -->
+        <div *ngIf="isNewPatient">
+          <form #registerForm="ngForm" (ngSubmit)="registerNewPatient()">
+            <input name="firstName" [(ngModel)]="newPatient.firstName" placeholder="First Name" required />
+            <input name="lastName" [(ngModel)]="newPatient.lastName" placeholder="Last Name" required />
+            <input name="personalNumber" [(ngModel)]="newPatient.personalNumber" placeholder="Personal Number" required />
+            <button type="submit" [disabled]="!registerForm.valid">Register</button>
+          </form>
+        </div>
+
+        <!-- Existing Patient Flow -->
+        <div *ngIf="!isNewPatient">
+          <label>Enter Personal Number:</label>
+          <input
+            [(ngModel)]="personalNumber"
+            (input)="onPersonalNumberInput()"
+            placeholder="e.g. 123456789"
+          />
+          <!-- Loading Indicator -->
+          <div *ngIf="searching" class="loading-indicator">
+            🔄 Searching...
+          </div>
+          <!-- Result Messages -->
+          <div *ngIf="patientFound === false" class="error-message">
+            ❌ No patient found with that personal number.
+          </div>
+          <div *ngIf="patientFound === true" class="success-message">
+            ✅ Patient found. You can now create an appointment.
+          </div>
+
+          <!-- Toggle to new patient -->
+          <div class="toggle-label" (click)="togglePatientType()">
+            Is This About A New Patient?
+          </div>
+        </div>
+
+        <!-- Appointment Form -->
+        <form
+          [formGroup]="appointmentForm"
+          (ngSubmit)="onSubmit()"
+          *ngIf="isNewPatient || patientFound === true"
+        >
+          <input [value]="personalNumber" formControlName="patientId" readonly />
+          <input formControlName="Doctor" placeholder="Doctor" required />
+          <select formControlName="type">
+            <option value="checkup">Checkup</option>
+            <option value="extensive">Extensive</option>
+            <option value="operation">Operation</option>
+          </select>
+          <input formControlName="date" type="datetime-local" required />
+          <button type="submit" [disabled]="appointmentForm.invalid">Create Appointment</button>
+        </form>
       </div>
     </div>
-  </ng-template>
-
-  <div class="right-section">
-    <form [formGroup]="appointmentForm" (ngSubmit)="onSubmit()">
-      <input formControlName="patientId" placeholder="Patient ID" [value]="searchedPatientId" readonly>
-      <input formControlName="Doctor" placeholder="Doctor" required>
-      <select formControlName="type">
-        <option value="checkup">Checkup</option>
-        <option value="extensive">Extensive</option>
-        <option value="operation">Operation</option>
-      </select>
-      <input formControlName="date" type="datetime-local" required>
-      <button type="submit" [disabled]="appointmentForm.invalid">Create Appointment</button>
-    </form>
-  </div>
-
-  <ng-container *ngIf="isModalOpen">
-    <ng-container *ngTemplateOutlet="patientModal"></ng-container>
-  </ng-container>
-</div>
   `
 })
 export class AppointmentCreateComponent {
-  appointmentForm: FormGroup;
-  patientSearchForm: FormGroup; // New form group for searching patients
-  isModalOpen: boolean = false; // Track modal state
-  searchedPatientId: string | undefined;
-  searchedPatientName: string | undefined; // To hold the searched name
-  showPatientCreate: any;
+  @Input() showModal: boolean = false;
+  @Output() closeModalEvent = new EventEmitter<void>();
 
-  constructor(private fb: FormBuilder, private appointmentService: AppointmentService, private patientService: PatientService) {
+  appointmentForm: FormGroup;
+  isNewPatient = false;
+  searching: boolean = false;
+  private inputTimeout: any;
+
+  newPatient = {
+    firstName: '',
+    lastName: '',
+    personalNumber: ''
+  };
+
+  personalNumber = '';
+  patientFound: boolean | null = null;
+
+  constructor(
+    private fb: FormBuilder,
+    private appointmentService: AppointmentService,
+    private patientService: PatientService
+  ) {
     this.appointmentForm = this.fb.group({
       patientId: ['', Validators.required],
       Doctor: ['', Validators.required],
       type: ['checkup', Validators.required],
       date: ['', Validators.required],
     });
-
-    // Initialize patient search form
-    this.patientSearchForm = this.fb.group({
-      firstName: ['', Validators.required],
-      lastName: ['', Validators.required],
-    });
   }
 
-  openModal() {
-    this.isModalOpen = true; // Open the modal
+  togglePatientType() {
+    this.isNewPatient = !this.isNewPatient;
+    this.patientFound = null;
+    this.personalNumber = '';
   }
 
   closeModal() {
-    this.isModalOpen = false; // Close the modal
+    this.resetForm();
+    this.closeModalEvent.emit();
   }
+
+  resetForm() {
+    this.isNewPatient = false;
+    this.personalNumber = '';
+    this.patientFound = null;
+    this.newPatient = { firstName: '', lastName: '', personalNumber: '' };
+    this.appointmentForm.reset();
+  }
+
+  registerNewPatient() {
+    const patientData = {
+      ...this.newPatient,
+      id: this.patientService.createId(),
+      phoneNumber: '',
+      appointments: []
+    };
+
+    this.patientService.createPatient(patientData).then(() => {
+      this.personalNumber = this.newPatient.personalNumber;
+      this.appointmentForm.controls['patientId'].setValue(this.personalNumber);
+      this.newPatient = { firstName: '', lastName: '', personalNumber: '' };
+      this.patientFound = true;
+    });
+  }
+
+  checkPatient() {
+    if (!this.personalNumber.trim()) {
+      this.patientFound = null;
+      return;
+    }
+  
+    this.searching = true;
+  
+    this.patientService.getPatientByPersonalNumber(this.personalNumber).subscribe(patient => {
+      this.searching = false;
+      this.patientFound = !!patient;
+  
+      if (patient) {
+        this.appointmentForm.controls['patientId'].setValue(this.personalNumber);
+      } else {
+        this.appointmentForm.controls['patientId'].reset();
+      }
+    });
+  }  
 
   onSubmit() {
     if (this.appointmentForm.valid) {
-      const appointmentData = {
+      const appointment = {
         ...this.appointmentForm.value,
         id: this.appointmentService.createId()
       };
-      this.appointmentService.createAppointment(appointmentData).then(() => {
-        console.log('Appointment Created');
-        this.appointmentForm.reset();
-        this.searchedPatientId = undefined; // Reset searched patient ID after creating an appointment
+      this.appointmentService.createAppointment(appointment).then(() => {
+        this.closeModal();
       });
     }
   }
 
-  searchPatientId() {
-    const firstName = this.patientSearchForm.get('firstName')?.value;
-    const lastName = this.patientSearchForm.get('lastName')?.value;
-
-    if (firstName && lastName) {
-      this.patientService.getPatientsByName(firstName, lastName).subscribe(patient => {
+  onPersonalNumberInput() {
+    this.searching = true; // Show loading immediately
+    this.patientFound = null; // Clear any previous result
+    clearTimeout(this.inputTimeout);
+  
+    if (!this.personalNumber.trim()) {
+      this.searching = false;
+      return;
+    }
+  
+    this.inputTimeout = setTimeout(() => {
+      this.patientService.getPatientByPersonalNumber(this.personalNumber).subscribe(patient => {
+        this.searching = false;
+        this.patientFound = !!patient;
+  
         if (patient) {
-          this.searchedPatientId = patient.id; // Assuming patient.id contains the ID
-          this.appointmentForm.controls['patientId'].setValue(this.searchedPatientId); // Set the patient ID in the form
-          this.searchedPatientName = undefined; // Reset any previous search name
+          this.appointmentForm.controls['patientId'].setValue(this.personalNumber);
         } else {
-          this.searchedPatientId = undefined; // Clear the ID if no patient found
-          this.searchedPatientName = `${firstName} ${lastName}`; // Set searched name for display
+          this.appointmentForm.controls['patientId'].reset();
         }
       });
-    }
+    }, 500); // debounce delay
   }
+  
 }

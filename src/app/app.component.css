@@ -1,20 +1,24 @@
 /* app.component.css */
 .app-container {
-    display: flex;
-    height: 100vh; /* Full height */
-  }
-  
+  display: flex;
+  height: 100vh;
+  overflow: hidden; /* prevent page scroll */
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  height: 100vh;
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+
   main.main-content {
     flex: 1; /* Allow the main content to fill the available space */
     padding: 20px; /* Add some padding */
     overflow-y: auto; /* Enable scrolling if content overflows */
   }
-  .main-content {
-    margin-left: 250px; /* Adjust this value to match the width of your side nav */
-    padding-top: 20px;  /* Add padding to ensure content starts below the navbar */
-    width: calc(100% - 250px); /* Adjust the width of the main content */
-  }
-  
   
   /* Optional: Add some styles for the sidenav */
   .side-menu {

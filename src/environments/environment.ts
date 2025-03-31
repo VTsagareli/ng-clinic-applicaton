@@ -1,6 +1,6 @@
 export const environment = {
     production: false,
-    firebaseConfig: {
+    firebase: {
         apiKey: "AIzaSyAK8jOOmvWYsmqNBpXeNE7KQBwRGEYDyEg",
         authDomain: "ng-clinic-application.firebaseapp.com",
         projectId: "ng-clinic-application",

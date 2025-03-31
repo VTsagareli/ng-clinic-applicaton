@@ -5,8 +5,8 @@ import { PatientListComponent } from '../app/features/patient/patient-list/patie
 import { PatientCreateComponent } from '../app/features/patient/patient-create/patient-create.component';
 import { DoctorListComponent } from '../app/features/doctor/doctor-list/doctor-list.component';
 import { DoctorCreateComponent } from '../app/features/doctor/doctor-create/doctor-create.component';
-import { ProfileComponent } from '../app/shared/components/profile/profile.component';
 import { LoginComponent } from '../app/auth/login/login.components'; // Adjust import based on your structure
+import { RegisterComponent } from '../app/auth/register/register.component';
 
 
 export const routes: Routes = [
@@ -31,7 +31,7 @@ export const routes: Routes = [
       { path: 'create', component: DoctorCreateComponent },
     ],
   },
-  { path: 'profile', component: ProfileComponent },
   { path: 'login', component: LoginComponent }, // Add login route
+  { path: 'register', component: RegisterComponent },
   { path: '', redirectTo: 'appointments', pathMatch: 'full' },  // Default route
 ];

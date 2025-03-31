@@ -14,7 +14,7 @@ export class FirebaseService {
 
   constructor() {
     // Initialize Firebase app with the environment configuration
-    this.app = initializeApp(environment.firebaseConfig);
+    this.app = initializeApp(environment.firebase);
     
     // Initialize Firestore and Analytics (optional)
     this.firestore = getFirestore(this.app);

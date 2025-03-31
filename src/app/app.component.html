@@ -1,6 +1,12 @@
-<div class="app-container">
+<ng-container *ngIf="shouldShowSideNav(); else authLayout">
+  <div class="app-container">
     <app-side-nav></app-side-nav>
     <main class="main-content">
       <router-outlet></router-outlet>
     </main>
   </div>
+</ng-container>
+
+<ng-template #authLayout>
+  <router-outlet></router-outlet>
+</ng-template>

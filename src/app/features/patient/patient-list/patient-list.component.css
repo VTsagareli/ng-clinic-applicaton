@@ -3,9 +3,14 @@
     max-width: 800px;
     margin: 0 auto;
   }
-  
-  .patients-table {
+
+  .patients-table mat-header-cell {
     width: 100%;
+    background-color: #696666 !important;
+  }
+
+  .patients-table mat-cell {
+    background-color: #888787;
   }
   
   .loading-spinner-container {
@@ -19,4 +24,3 @@
   mat-spinner {
     margin-bottom: 10px;
   }
-  

@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service'; // 👈 Adjust path if needed
 
 @Component({
   selector: 'app-side-nav',
@@ -8,7 +9,6 @@ import { Router, RouterModule } from '@angular/router';
   template: `
     <aside class="side-menu">
       <ul>
-        <li><a routerLink="/profile">Profile</a></li>
         <li><a routerLink="/appointments">Appointments</a></li>
         <li><a routerLink="/patients">Patients</a></li>
         <li><a routerLink="/doctors">Doctors</a></li>
@@ -19,9 +19,13 @@ import { Router, RouterModule } from '@angular/router';
   styleUrls: ['./side-nav.component.css']
 })
 export class SideNavComponent {
-  constructor(private router: Router){}
+  constructor(private authService: AuthService, private router: Router) {}
+
   logout() {
-    console.log("auth not yet implemented");
-    // this.router.navigate(['/login']);  
+    this.authService.signOut().then(() => {
+      this.router.navigate(['/login']);
+    }).catch(error => {
+      console.error('Logout failed:', error);
+    });
   }
 }

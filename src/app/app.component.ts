@@ -1,9 +1,9 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { AppointmentListComponent } from '../app/features/appointment/appointment-list/appointment-list.component'
-import { AppointmentCreateComponent } from "./features/appointment/appointment-create/appointment-create.component";
-import { RouterModule } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { RouterOutlet, Router, RouterModule } from '@angular/router';
+import { AppointmentListComponent } from '../app/features/appointment/appointment-list/appointment-list.component';
+import { AppointmentCreateComponent } from './features/appointment/appointment-create/appointment-create.component';
 import { SideNavComponent } from './shared/components/side-nav/side-nav.component';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-root',
@@ -11,16 +11,21 @@ import { SideNavComponent } from './shared/components/side-nav/side-nav.componen
   imports: [
     RouterOutlet,
     RouterModule,
+    CommonModule,
     AppointmentListComponent,
     AppointmentCreateComponent,
     SideNavComponent
-],
+  ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
 export class AppComponent {
-logout() {
-throw new Error('Method not implemented.');
-}
+  private router = inject(Router);
+
+  shouldShowSideNav(): boolean {
+    const hiddenRoutes = ['/login', '/register'];
+    return !hiddenRoutes.includes(this.router.url);
+  }
+
   title = 'ng-clinic-application';
 }

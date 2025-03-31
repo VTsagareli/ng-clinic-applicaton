@@ -1,22 +1,41 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AppointmentService } from '../../../core/services/appointment.service';
-import { Observable, catchError, of } from 'rxjs';
 import { Appointment } from '../../../core/models/appointment.model';
-import { MatTableModule } from '@angular/material/table';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AppointmentCreateComponent } from "../appointment-create/appointment-create.component";
+import { RouterModule } from '@angular/router';
+import { catchError, of } from 'rxjs';
 
 @Component({
   standalone: true,
   selector: 'app-appointment-list',
-  imports: [CommonModule, MatTableModule, MatProgressSpinnerModule, AppointmentCreateComponent],
   styleUrls: ['./appointment-list.component.css'],
+  imports: [
+    CommonModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatProgressSpinnerModule,
+    AppointmentCreateComponent,
+    RouterModule
+  ],
   template: `
-    <div class="appointment-container" *ngIf="appointments$ | async as appointments; else loading">
-      <app-appointment-create></app-appointment-create>
-      <h2>Scheduled Appointments</h2>
-      <mat-table [dataSource]="appointments" class="appointments-table" matSort>
+    <div class="appointment-container">
+      <div class="appointments-header">
+        <h3>Scheduled Appointments</h3>
+        <button class="add-appointment-button" (click)="showModal = true">Add New +</button>
+      </div> 
+    
+      <!-- AppointmentCreateComponent modal trigger -->
+      <app-appointment-create 
+        [showModal]="showModal" 
+        (closeModalEvent)="showModal = false">
+      </app-appointment-create>
+  
+
+      <mat-table [dataSource]="dataSource" class="appointments-table" matSort>
 
         <!-- First Name Column -->
         <ng-container matColumnDef="firstName">
@@ -54,39 +73,39 @@ import { AppointmentCreateComponent } from "../appointment-create/appointment-cr
           <mat-cell *matCellDef="let appointment"> {{appointment.doctorName}} </mat-cell>
         </ng-container>
 
-        <!-- Header and Rows -->
+        <!-- Header and Row Definitions -->
         <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
         <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
       </mat-table>
-    </div>
 
-    <!-- Loading Spinner -->
-    <ng-template #loading>
-      <div class="loading-spinner-container">
-        <mat-spinner></mat-spinner>
-        <p>Loading appointments...</p>
-      </div>
-    </ng-template>
+      <mat-paginator [pageSize]="15" [pageSizeOptions]="[1, 2, 3]" showFirstLastButtons></mat-paginator>
+    </div>
   `
 })
 export class AppointmentListComponent implements OnInit {
-  appointments$: Observable<Appointment[]>;
-  displayedColumns: string[] = ['firstName', 'lastName', 'type', 'date', 'time', 'doctorName'];
+  showModal: boolean = false;
 
-  constructor(private appointmentService: AppointmentService) {
-    this.appointments$ = this.appointmentService.getAppointmentsWithDetails().pipe(
-      catchError(error => {
-        console.error('Error fetching appointments:', error);
-        return of([]); // Return an empty array if there's an error
-      })
-    );
-  }
+  displayedColumns: string[] = ['firstName', 'lastName', 'type', 'date', 'time', 'doctorName'];
+  dataSource = new MatTableDataSource<Appointment>([]);
+  showSlider = false;
+
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+
+  constructor(private appointmentService: AppointmentService) {}
 
   ngOnInit(): void {
-    // Subscribe to the appointments$ observable to log doctor names
-    this.appointments$.subscribe(appointments => {
-      const doctorNames = appointments.map(appointment => appointment.doctorName).filter(name => name !== undefined);
-      console.log('Doctor Names:', doctorNames);
+    this.appointmentService.getAppointmentsWithDetails().pipe(
+      catchError(error => {
+        console.error('Error fetching appointments:', error);
+        return of([]);
+      })
+    ).subscribe(appointments => {
+      this.dataSource.data = appointments;
+      this.dataSource.paginator = this.paginator;
     });
+  }
+
+  openModal() {
+    this.showModal = true;
   }
 }

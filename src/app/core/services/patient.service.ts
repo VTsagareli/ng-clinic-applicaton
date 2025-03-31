@@ -96,4 +96,21 @@ export class PatientService {
     );
   }
 
+  getPatientByPersonalNumber(personalNumber: string): Observable<Patient | undefined> {
+    const patientsRef = collection(this.firestore, 'patients');
+    const q = query(patientsRef, where('personalNumber', '==', personalNumber));
+  
+    return from(getDocs(q)).pipe(
+      map(snapshot => {
+        if (snapshot.empty) {
+          return undefined; // No match
+        } else {
+          const patientDoc = snapshot.docs[0]; // Use the first result
+          return { ...patientDoc.data(), id: patientDoc.id } as Patient;
+        }
+      })
+    );
+  }
+  
+
 }
