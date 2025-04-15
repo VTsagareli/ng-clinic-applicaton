@@ -1,0 +1,155 @@
+@use 'clinic-theme' as *;
+
+/* Backdrop */
+.modal-backdrop {
+  display: flex;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+  justify-content: center;
+  align-items: center;
+}
+
+/* Modal Content */
+.modal-content {
+  background-color: $background-color;
+  padding: 30px;
+  width: 90%;
+  max-width: 500px;
+  border-radius: 8px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+/* Close Button */
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background-color: $primary-color;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 20px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  line-height: 28px;
+  text-align: center;
+
+  &:hover {
+    background-color: $primary-hover-color;
+  }
+}
+
+/* Form Elements */
+.modal-content form input,
+.modal-content form select,
+.modal-content form button {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  font-size: 16px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+.modal-content form button {
+  background-color: $success-color;
+  color: white;
+  border: none;
+  cursor: pointer;
+
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+
+  &:hover:enabled {
+    background-color: darken($success-color, 10%);
+  }
+}
+
+.section-wrapper {
+  padding: 1.5rem;
+  background-color: $background-color;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+
+  h3 {
+    font-size: 1.4rem;
+    color: $text-color;
+    margin: 0;
+  }
+}
+
+.doctors-table mat-cell.cdk-column-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+
+/* Table Styling */
+.doctors-table {
+  width: 100%;
+  border-spacing: 0;
+
+  mat-header-cell {
+    background-color: $table-header;
+    font-weight: bold;
+    color: $text-color;
+  }
+
+  mat-cell {
+    background-color: $table-row;
+    color: $text-color;
+  }
+
+  mat-header-row, mat-row {
+    border-bottom: 1px solid $light-border;
+  }
+  
+}
+
+.delete-button {
+  background-color: $accent-color;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: darken($accent-color, 10%);
+  }
+}
+
+.primary-action-button {
+  background-color: $primary-color;
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: $primary-hover-color;
+  }
+}

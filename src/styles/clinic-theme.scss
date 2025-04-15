@@ -1,0 +1,21 @@
+$primary-color: #3f51b5;
+$primary-hover-color: #2c3e9d;
+$accent-color: #f44336;
+$success-color: #4CAF50;
+$background-color: #f9f9f9;
+$surface-color: #ffffff;
+$text-color: #0d0d0e;
+$light-border: #e0e0e0;
+$table-header: #f0f0f0;
+$table-row: #ffffff;
+
+.app-theme {
+  --primary-color: #{$primary-color};
+  --accent-color: #{$accent-color};
+  --background-color: #{$background-color};
+  --surface-color: #{$surface-color};
+  --text-color: #{$text-color};
+  --border-color: #{$light-border};
+  --table-header-bg: #{$table-header};
+  --table-row-bg: #{$table-row};
+}

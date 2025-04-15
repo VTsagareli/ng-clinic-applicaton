@@ -1,7 +1,5 @@
 import { Component, inject } from '@angular/core';
 import { RouterOutlet, Router, RouterModule } from '@angular/router';
-import { AppointmentListComponent } from '../app/features/appointment/appointment-list/appointment-list.component';
-import { AppointmentCreateComponent } from './features/appointment/appointment-create/appointment-create.component';
 import { SideNavComponent } from './shared/components/side-nav/side-nav.component';
 import { CommonModule } from '@angular/common';
 
@@ -12,10 +10,8 @@ import { CommonModule } from '@angular/common';
     RouterOutlet,
     RouterModule,
     CommonModule,
-    AppointmentListComponent,
-    AppointmentCreateComponent,
     SideNavComponent
-  ],
+],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })

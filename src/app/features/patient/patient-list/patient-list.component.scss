@@ -1,0 +1,104 @@
+@use 'clinic-theme' as *;
+
+.section-wrapper {
+  background-color: $background-color;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+
+  h3 {
+    font-size: 1.4rem;
+    color: $text-color;
+    margin: 0;
+  }
+
+  .primary-action-button {
+    background-color: $primary-color;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+
+    &:hover {
+      background-color: $primary-hover-color;
+    }
+  }
+}
+
+.patients-table mat-cell.cdk-column-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.patients-table {
+  width: 100%;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  overflow: hidden;
+
+  mat-header-cell {
+    background-color: $table-header;
+    color: $text-color;
+    font-weight: bold;
+    font-size: 0.95rem;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  mat-cell {
+    background-color: $table-row;
+    color: $text-color;
+    font-size: 0.95rem;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  mat-row:hover mat-cell {
+    background-color: lighten($table-row, 5%);
+  }
+}
+
+
+
+mat-icon {
+  font-size: 18px;
+}
+
+.delete-button {
+  background-color: $accent-color;
+  color: white;
+  border: none;
+  padding: 0;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  width: 30px;
+  line-height: 1;
+
+  &:hover {
+    background-color: darken($accent-color, 10%);
+  }
+}
+
+
+.loading-spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 4rem;
+  color: $primary-color;
+}

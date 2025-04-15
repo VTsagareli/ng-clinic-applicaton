@@ -1,0 +1,57 @@
+/* Global Styles for ng-clinic-application */
+
+@import './styles/clinic-theme.scss';
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Arial', sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+/* Universal Add Button */
+.add-button,
+.primary-action-button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.add-button:hover,
+.primary-action-button:hover {
+  background-color: darken($primary-color, 10%);
+}
+
+/* Universal Delete Button */
+.delete-button,
+button.mat-icon-button[color="warn"] {
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.delete-button:hover,
+button.mat-icon-button[color="warn"]:hover {
+  background-color: darken($accent-color, 10%);
+}
+
+/* Material Table Header and Rows */
+.mat-header-cell {
+  background-color: var(--table-header-bg) !important;
+  font-weight: bold;
+}
+
+.mat-cell {
+  background-color: var(--table-row-bg);
+}

@@ -6,11 +6,10 @@ import {
   setDoc,
   deleteDoc,
   updateDoc,
-  onSnapshot,
   getDoc,
-  getDocs
+  onSnapshot
 } from 'firebase/firestore';
-import { from, map, Observable, BehaviorSubject, switchMap, of } from 'rxjs';
+import { from, map, Observable, BehaviorSubject } from 'rxjs';
 import { Appointment } from '../models/appointment.model';
 import { FirebaseService } from './firebase.service';
 import { PatientService } from './patient.service';
@@ -21,7 +20,7 @@ import { DoctorService } from './doctor.service';
 })
 export class AppointmentService {
   private firestore: Firestore;
-  private appointmentsSubject = new BehaviorSubject<Appointment[]>([]); // Create a BehaviorSubject to hold appointments
+  private appointmentsSubject = new BehaviorSubject<Appointment[]>([]);
 
   constructor(
     private firebaseService: FirebaseService,
@@ -29,105 +28,68 @@ export class AppointmentService {
     private doctorService: DoctorService
   ) {
     this.firestore = this.firebaseService.getFirestoreInstance();
+    this.listenToAppointments();
   }
 
-  // Create a unique ID for a new appointment
-  createId(): string {
-    return doc(collection(this.firestore, 'appointments')).id; // Generate a new document ID
-  }
-
-  // Get all appointments as an observable
-  getAppointments(): Observable<Appointment[]> {
+  private listenToAppointments(): void {
     const appointmentsCollection = collection(this.firestore, 'appointments');
 
-    // Use onSnapshot to listen for real-time updates
-    onSnapshot(appointmentsCollection, (querySnapshot) => {
-      const appointments = querySnapshot.docs.map(doc => ({
-        ...doc.data(),
-        id: doc.id
-      } as Appointment));
-      this.appointmentsSubject.next(appointments); // Emit the new appointments array
-    });
+    onSnapshot(appointmentsCollection, async (querySnapshot) => {
+      const appointments: Appointment[] = [];
 
-    return this.appointmentsSubject.asObservable(); // Return the observable
-  }
+      for (const docSnap of querySnapshot.docs) {
+        const data = docSnap.data() as Appointment;
+        data.id = docSnap.id;
 
-// Get all appointments with patient and doctor details
-getAppointmentsWithDetails(): Observable<Appointment[]> {
-  const appointmentsCollection = collection(this.firestore, 'appointments');
+        // Attach Patient
+        const patient = await this.patientService.getPatientById(data.patientId).toPromise();
+        if (patient) {
+          data.Patient = patient;
+        }
 
-  return from(getDocs(appointmentsCollection)).pipe(
-    switchMap(querySnapshot => {
-      if (querySnapshot.empty) {
-        // Return an empty array if there are no appointments
-        return of([]); // Emit an empty array
+        // Attach Doctor
+        const doctor = await this.doctorService.getDoctorById(data.Doctor).toPromise();
+        if (doctor) {
+          data.DoctorObject = doctor;
+        }
+
+        appointments.push(data);
       }
 
-      const appointments = querySnapshot.docs.map(doc => ({
-        ...doc.data(),
-        id: doc.id
-      } as Appointment));
+      this.appointmentsSubject.next(appointments);
+    });
+  }
 
-      // Extract unique patient and doctor IDs
-      const patientIds = [...new Set(appointments.map(app => app.patientId))];
-      const doctorIds = [...new Set(appointments.map(app => app.doctorId))];
+  getAppointmentsWithDetails(): Observable<Appointment[]> {
+    return this.appointmentsSubject.asObservable();
+  }
 
-      // Fetch patient and doctor data
-      return this.patientService.getPatientsByIds(patientIds).pipe(
-        switchMap(patients => 
-          this.doctorService.getDoctorsByIds(doctorIds).pipe(
-            map(doctors => {
-              console.log('Fetched Doctors:', doctors); // Log fetched doctors for debugging
-              return appointments.map(appointment => {
-                const patient = patients.find(p => p.id === appointment.patientId);
-                const doctor = doctors.find(d => d.id === appointment.doctorId);
-                console.log('Appointment:', appointment, 'Patient:', patient, 'Doctor:', doctor); // Log appointment details
-                return {
-                  ...appointment,
-                  firstName: patient ? patient.firstName : '',
-                  lastName: patient ? patient.lastName : '',
-                  doctorName: doctor ? doctor.name : '' // Assuming doctor has a 'name' property
-                };
-              });
-            })
-          )
-        )
-      );
-    })
-  );
-}
+  createId(): string {
+    return doc(collection(this.firestore, 'appointments')).id;
+  }
 
+  createAppointment(appointment: Appointment): Promise<void> {
+    const ref = doc(this.firestore, `appointments/${appointment.id}`);
+    return setDoc(ref, appointment);
+  }
 
-  // Get a specific appointment by ID
   getAppointmentById(id: string): Observable<Appointment | undefined> {
-    const appointmentDocRef = doc(this.firestore, `appointments/${id}`);
-
-    return from(getDoc(appointmentDocRef)).pipe(
-      map(docSnapshot => {
-        if (docSnapshot.exists()) {
-          return { ...docSnapshot.data(), id: docSnapshot.id } as Appointment;
-        } else {
-          return undefined;  // Return undefined if no document exists
-        }
+    const ref = doc(this.firestore, `appointments/${id}`);
+    return from(getDoc(ref)).pipe(
+      map(snapshot => {
+        if (!snapshot.exists()) return undefined;
+        return { ...snapshot.data(), id: snapshot.id } as Appointment;
       })
     );
   }
 
-  // Add a new appointment
-  createAppointment(appointment: Appointment): Promise<void> {
-    const newAppointmentRef = doc(this.firestore, `appointments/${appointment.id}`);
-    return setDoc(newAppointmentRef, appointment);
-  }
-
-  // Update an existing appointment by ID
   updateAppointment(id: string, data: Partial<Appointment>): Promise<void> {
-    const appointmentDocRef = doc(this.firestore, `appointments/${id}`);
-    return updateDoc(appointmentDocRef, data);
+    const ref = doc(this.firestore, `appointments/${id}`);
+    return updateDoc(ref, data);
   }
 
-  // Delete an appointment by ID
   deleteAppointment(id: string): Promise<void> {
-    const appointmentDocRef = doc(this.firestore, `appointments/${id}`);
-    return deleteDoc(appointmentDocRef);
+    const ref = doc(this.firestore, `appointments/${id}`);
+    return deleteDoc(ref);
   }
 }

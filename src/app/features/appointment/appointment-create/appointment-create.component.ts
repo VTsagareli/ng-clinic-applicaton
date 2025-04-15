@@ -1,9 +1,12 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule, FormControl } from '@angular/forms';
 import { AppointmentService } from '../../../core/services/appointment.service';
 import { PatientService } from '../../../core/services/patient.service';
 import { RouterModule } from '@angular/router';
+import { DoctorService } from '../../../core/services/doctor.service';
+import { Doctor } from '../../../core/models/doctor.model';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
   selector: 'app-appointment-create',
@@ -16,13 +19,11 @@ import { RouterModule } from '@angular/router';
     RouterModule
   ],
   template: `
-    <!-- Modal Form -->
     <div class="modal-backdrop" *ngIf="showModal">
       <div class="modal-content">
         <button class="close-button" (click)="closeModal()">×</button>
         <h2>Create Appointment</h2>
 
-        <!-- New Patient Flow -->
         <div *ngIf="isNewPatient">
           <form #registerForm="ngForm" (ngSubmit)="registerNewPatient()">
             <input name="firstName" [(ngModel)]="newPatient.firstName" placeholder="First Name" required />
@@ -32,44 +33,54 @@ import { RouterModule } from '@angular/router';
           </form>
         </div>
 
-        <!-- Existing Patient Flow -->
         <div *ngIf="!isNewPatient">
-          <label>Enter Personal Number:</label>
-          <input
-            [(ngModel)]="personalNumber"
-            (input)="onPersonalNumberInput()"
-            placeholder="e.g. 123456789"
-          />
-          <!-- Loading Indicator -->
-          <div *ngIf="searching" class="loading-indicator">
-            🔄 Searching...
-          </div>
-          <!-- Result Messages -->
-          <div *ngIf="patientFound === false" class="error-message">
-            ❌ No patient found with that personal number.
-          </div>
-          <div *ngIf="patientFound === true" class="success-message">
-            ✅ Patient found. You can now create an appointment.
-          </div>
+        <div class="search-input-group">
+        <input
+          class="personal-number-input"
+          [(ngModel)]="manualSearchInput"
+          name="manualSearchInput"
+          placeholder="e.g. 123456789"
+        />
 
-          <!-- Toggle to new patient -->
-          <div class="toggle-label" (click)="togglePatientType()">
-            Is This About A New Patient?
-          </div>
-        </div>
+  <button type="button" class="search-button" (click)="manualSearch()">🔍</button>
+</div>
 
-        <!-- Appointment Form -->
+
+  <div *ngIf="searching" class="loading-indicator">
+    🔄 Searching...
+  </div>
+  <div *ngIf="patientFound === false" class="error-message">
+    ❌ No patient found with that personal number.
+  </div>
+  <div *ngIf="patientFound === true" class="success-message">
+    ✅ Patient found. You can now create an appointment.
+  </div>
+
+  <div class="toggle-label" (click)="togglePatientType()">
+    Is This About A New Patient?
+  </div>
+</div>
+
+
         <form
           [formGroup]="appointmentForm"
           (ngSubmit)="onSubmit()"
           *ngIf="isNewPatient || patientFound === true"
         >
-          <input [value]="personalNumber" formControlName="patientId" readonly />
-          <input formControlName="Doctor" placeholder="Doctor" required />
+          <input [value]="personalNumberControl.value" formControlName="patientId" readonly />
+
+          <select formControlName="Doctor" required>
+            <option value="">Select Doctor</option>
+            <option *ngFor="let doc of doctors" [value]="doc.id">
+              {{ doc.name }} - {{ doc.specialization }}
+            </option>
+          </select>
+
           <select formControlName="type">
-            <option value="checkup">Checkup</option>
-            <option value="extensive">Extensive</option>
-            <option value="operation">Operation</option>
+            <option value="First Consultation">First Consultation</option>
+            <option value="Follow Up">Follow Up</option>
+            <option value="Extensive">Extensive</option>
+            <option value="Operation">Operation</option>
           </select>
           <input formControlName="date" type="datetime-local" required />
           <button type="submit" [disabled]="appointmentForm.invalid">Create Appointment</button>
@@ -78,14 +89,16 @@ import { RouterModule } from '@angular/router';
     </div>
   `
 })
-export class AppointmentCreateComponent {
+export class AppointmentCreateComponent implements OnInit {
   @Input() showModal: boolean = false;
   @Output() closeModalEvent = new EventEmitter<void>();
 
   appointmentForm: FormGroup;
   isNewPatient = false;
   searching: boolean = false;
-  private inputTimeout: any;
+  patientFound: boolean | null = null;
+
+  personalNumberControl = new FormControl('', Validators.required);
 
   newPatient = {
     firstName: '',
@@ -93,13 +106,15 @@ export class AppointmentCreateComponent {
     personalNumber: ''
   };
 
-  personalNumber = '';
-  patientFound: boolean | null = null;
+  doctors: Doctor[] = [];
+manualSearchInput: string = "";
 
   constructor(
     private fb: FormBuilder,
     private appointmentService: AppointmentService,
-    private patientService: PatientService
+    private patientService: PatientService,
+    private doctorService: DoctorService,
+    private cdr: ChangeDetectorRef
   ) {
     this.appointmentForm = this.fb.group({
       patientId: ['', Validators.required],
@@ -109,10 +124,37 @@ export class AppointmentCreateComponent {
     });
   }
 
+  ngOnInit(): void {
+    this.doctorService.getDoctors().subscribe(doctors => this.doctors = doctors);
+
+    this.personalNumberControl.valueChanges
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged()
+      )
+      .subscribe(value => {
+        // if (value && value.trim()) {
+        //   this.searching = true;
+        //   this.patientService.getPatientByPersonalNumber(value).subscribe(patient => {
+        //     this.searching = false;
+        //     this.patientFound = !!patient;
+        //     if (patient) {
+        //       this.appointmentForm.controls['patientId'].setValue(patient.id);
+        //     } else {
+        //       this.appointmentForm.controls['patientId'].reset();
+        //     }
+        //   });
+        // } else {
+        //   this.patientFound = null;
+        //   this.appointmentForm.controls['patientId'].reset();
+        // }
+      });
+  }
+
   togglePatientType() {
     this.isNewPatient = !this.isNewPatient;
     this.patientFound = null;
-    this.personalNumber = '';
+    this.personalNumberControl.reset();
   }
 
   closeModal() {
@@ -122,9 +164,9 @@ export class AppointmentCreateComponent {
 
   resetForm() {
     this.isNewPatient = false;
-    this.personalNumber = '';
     this.patientFound = null;
     this.newPatient = { firstName: '', lastName: '', personalNumber: '' };
+    this.personalNumberControl.reset();
     this.appointmentForm.reset();
   }
 
@@ -137,67 +179,53 @@ export class AppointmentCreateComponent {
     };
 
     this.patientService.createPatient(patientData).then(() => {
-      this.personalNumber = this.newPatient.personalNumber;
-      this.appointmentForm.controls['patientId'].setValue(this.personalNumber);
+      this.personalNumberControl.setValue(this.newPatient.personalNumber);
+      this.appointmentForm.controls['patientId'].setValue(patientData.id);
       this.newPatient = { firstName: '', lastName: '', personalNumber: '' };
       this.patientFound = true;
     });
   }
 
-  checkPatient() {
-    if (!this.personalNumber.trim()) {
-      this.patientFound = null;
-      return;
-    }
-  
-    this.searching = true;
-  
-    this.patientService.getPatientByPersonalNumber(this.personalNumber).subscribe(patient => {
-      this.searching = false;
-      this.patientFound = !!patient;
-  
-      if (patient) {
-        this.appointmentForm.controls['patientId'].setValue(this.personalNumber);
-      } else {
-        this.appointmentForm.controls['patientId'].reset();
-      }
-    });
-  }  
-
   onSubmit() {
     if (this.appointmentForm.valid) {
       const appointment = {
         ...this.appointmentForm.value,
-        id: this.appointmentService.createId()
+        id: this.appointmentService.createId(),
+        date: new Date(this.appointmentForm.value.date).toISOString()
       };
-      this.appointmentService.createAppointment(appointment).then(() => {
-        this.closeModal();
-      });
+      this.appointmentService.createAppointment(appointment).then(() => this.closeModal());
     }
   }
 
-  onPersonalNumberInput() {
-    this.searching = true; // Show loading immediately
-    this.patientFound = null; // Clear any previous result
-    clearTimeout(this.inputTimeout);
+  manualSearch() {
+    console.log('[manualSearch] Clicked search button');
+    console.log('[manualSearch] Value of manualSearchInput:', this.manualSearchInput);
   
-    if (!this.personalNumber.trim()) {
-      this.searching = false;
-      return;
-    }
+    const value = this.manualSearchInput?.trim();
   
-    this.inputTimeout = setTimeout(() => {
-      this.patientService.getPatientByPersonalNumber(this.personalNumber).subscribe(patient => {
+    if (value) {
+      console.log('[manualSearch] Trimmed value is valid, proceeding to search...');
+      this.searching = true;
+  
+      this.patientService.getPatientByPersonalNumber(value).subscribe(patient => {
         this.searching = false;
         this.patientFound = !!patient;
-  
+      
         if (patient) {
-          this.appointmentForm.controls['patientId'].setValue(this.personalNumber);
+          this.appointmentForm.controls['patientId'].setValue(patient.id);
         } else {
           this.appointmentForm.controls['patientId'].reset();
         }
+      
+        this.cdr.markForCheck();
       });
-    }, 500); // debounce delay
+      
+    } else {
+      console.log('[manualSearch] Input is empty or invalid, resetting search results.');
+      this.patientFound = null;
+      this.appointmentForm.controls['patientId'].reset();
+    }
   }
+  
   
 }

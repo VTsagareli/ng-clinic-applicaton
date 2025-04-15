@@ -1,64 +1,87 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PatientService } from '../../../core/services/patient.service';
-import { Observable } from 'rxjs';
 import { Patient } from '../../../core/models/patient.model';
 import { MatTableModule } from '@angular/material/table';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { RouterModule } from '@angular/router';
+import { Observable, catchError, of } from 'rxjs';
 
 @Component({
-  standalone: true,
   selector: 'app-patient-list',
-  imports: [CommonModule, MatTableModule, MatProgressSpinnerModule],
-  styleUrls: ['./patient-list.component.css'],
+  standalone: true,
+  imports: [CommonModule, MatTableModule, MatButtonModule, MatIconModule, RouterModule],
+  styleUrls: ['./patient-list.component.scss'],
   template: `
-<div class="patient-container" *ngIf="patients$ | async as patients; else loading">
-  <h2>Patients</h2>
-  
-  <mat-table [dataSource]="patients" class="patients-table" matSort>
+      <div class="section-wrapper">
+        <div class="section-header">
+          <h3>Registered Patients</h3>
+          <button class="primary-action-button" (click)="deleteAllPatients()">Delete All Patients</button>
+        </div>
 
-    <!-- First Name Column -->
-    <ng-container matColumnDef="firstName">
-      <mat-header-cell *matHeaderCellDef> First Name </mat-header-cell>
-      <mat-cell *matCellDef="let patient"> {{patient.firstName}} </mat-cell>
-    </ng-container>
+        <ng-container *ngIf="patients$ | async as patients">
+          <mat-table [dataSource]="patients" class="patients-table">
 
-    <!-- Last Name Column -->
-    <ng-container matColumnDef="lastName">
-      <mat-header-cell *matHeaderCellDef> Last Name </mat-header-cell>
-      <mat-cell *matCellDef="let patient"> {{patient.lastName}} </mat-cell>
-    </ng-container>
+            <!-- Personal Number Column -->
+            <ng-container matColumnDef="personalNumber">
+              <mat-header-cell *matHeaderCellDef> Personal ID </mat-header-cell>
+              <mat-cell *matCellDef="let patient"> {{ patient.personalNumber }} </mat-cell>
+            </ng-container>
 
-    <!-- Phone Number Column -->
-    <ng-container matColumnDef="phoneNumber">
-      <mat-header-cell *matHeaderCellDef> Phone Number </mat-header-cell>
-      <mat-cell *matCellDef="let patient"> {{patient.phoneNumber}} </mat-cell>
-    </ng-container>
+            <!-- First Name Column -->
+            <ng-container matColumnDef="firstName">
+              <mat-header-cell *matHeaderCellDef> First Name </mat-header-cell>
+              <mat-cell *matCellDef="let patient"> {{ patient.firstName }} </mat-cell>
+            </ng-container>
 
-    <!-- Header and Rows -->
-    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-  </mat-table>
-</div>
+            <!-- Last Name Column -->
+            <ng-container matColumnDef="lastName">
+              <mat-header-cell *matHeaderCellDef> Last Name </mat-header-cell>
+              <mat-cell *matCellDef="let patient"> {{ patient.lastName }} </mat-cell>
+            </ng-container>
 
-<!-- Loading Spinner -->
-<ng-template #loading>
-  <div class="loading-spinner-container">
-    <mat-spinner></mat-spinner>
-    <p>Loading patients...</p>
-  </div>
-</ng-template>
-`
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <mat-header-cell *matHeaderCellDef></mat-header-cell>
+              <mat-cell *matCellDef="let patient">
+                <button mat-icon-button color="warn" (click)="deletePatient(patient.id)">
+                  <mat-icon>close</mat-icon>
+                </button>
+              </mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+          </mat-table>
+        </ng-container>
+      </div>
+  `
 })
 export class PatientListComponent implements OnInit {
   patients$: Observable<Patient[]>;
-  displayedColumns: string[] = ['firstName', 'lastName', 'phoneNumber'];
+  displayedColumns: string[] = ['personalNumber', 'firstName', 'lastName', 'actions'];
 
   constructor(private patientService: PatientService) {
-    this.patients$ = this.patientService.getPatients();
+    this.patients$ = this.patientService.getPatients().pipe(
+      catchError(err => {
+        console.error('Failed to fetch patients', err);
+        return of([]);
+      })
+    );
   }
 
-  ngOnInit(): void {
-    this.patients$ = this.patientService.getPatients();
+  ngOnInit(): void {}
+
+  deletePatient(id: string) {
+    if (confirm('Are you sure you want to delete this patient?')) {
+      this.patientService.deletePatient(id);
+    }
+  }
+
+  deleteAllPatients() {
+    if (confirm('This will permanently delete all patients. Continue?')) {
+      this.patientService.deleteAllPatients();
+    }
   }
 }

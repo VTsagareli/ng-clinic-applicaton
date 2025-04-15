@@ -1,13 +1,15 @@
+import { Patient } from './patient.model';
+import { Doctor } from './doctor.model';
+
 export interface Appointment {
-    id: string;
-    patientId: string;
-    doctorId: string;
-    doctorName: string;
-    type: 'checkup' | 'extensive' | 'operation';  // 30 mins, 1 hr, 2 hrs
-    date: Date;
-    status: 'scheduled' | 'cancelled' | 'completed';
-    insuranceNumber?: string;  // only required when appointment is confirmed
-    firstName?: string;
-    lastName?: string;
-  }
-  
+  id: string;
+  patientId: string;
+  Doctor: string; // doctor ID (stored in Firestore)
+  type: string;
+  date: string; // ISO format
+  status?: string;
+
+  // Optional populated references
+  Patient?: Patient;
+  DoctorObject?: Doctor;
+}
