@@ -5,13 +5,14 @@ import { PatientListComponent } from '../app/features/patient/patient-list/patie
 import { PatientCreateComponent } from '../app/features/patient/patient-create/patient-create.component';
 import { DoctorListComponent } from '../app/features/doctor/doctor-list/doctor-list.component';
 import { DoctorCreateComponent } from '../app/features/doctor/doctor-create/doctor-create.component';
-import { LoginComponent } from '../app/auth/login/login.components'; // Adjust import based on your structure
+import { LoginComponent } from '../app/auth/login/login.components';
 import { RegisterComponent } from '../app/auth/register/register.component';
-
+import { AuthGuard } from '../app/core/guards/auth.guard';
 
 export const routes: Routes = [
   {
     path: 'appointments',
+    canActivate: [AuthGuard],
     children: [
       { path: '', component: AppointmentListComponent },
       { path: 'create', component: AppointmentCreateComponent },
@@ -19,6 +20,7 @@ export const routes: Routes = [
   },
   {
     path: 'patients',
+    canActivate: [AuthGuard],
     children: [
       { path: '', component: PatientListComponent },
       { path: 'create', component: PatientCreateComponent },
@@ -26,12 +28,14 @@ export const routes: Routes = [
   },
   {
     path: 'doctors',
+    canActivate: [AuthGuard],
     children: [
       { path: '', component: DoctorListComponent },
       { path: 'create', component: DoctorCreateComponent },
     ],
   },
-  { path: 'login', component: LoginComponent }, // Add login route
+  { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
-  { path: '', redirectTo: 'appointments', pathMatch: 'full' },  // Default route
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  { path: '**', redirectTo: 'login' } // catch-all fallback
 ];

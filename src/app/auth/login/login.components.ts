@@ -130,7 +130,7 @@ export class LoginComponent {
     if (this.loginForm.valid) {
       const { email, password } = this.loginForm.value;
       try {
-        await this.authService.signIn(email, password); // it's a Promise<User>
+        await this.authService.signIn(email, password);
         this.errorMessage = null;
         this.successMessage = 'Login successful! Redirecting...';
         setTimeout(() => this.router.navigate(['/appointments']), 2000);
